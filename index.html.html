@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roma che diventa ispirazione — Nathaniel Hawthorne</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --ink: #1a1208;
+            --parchment: #f5f0e0;
+            --parchment-dark: #e8dfc8;
+            --crimson: #7a2c2c;
+            --crimson-dark: #5a1e1e;
+            --gold: #b8933a;
+            --gold-light: #d4a84c;
+            --steel: #2c3e50;
+            --text: #2a1f0e;
+            --muted: #7a6a52;
+        }
+
+        body {
+            font-family: 'EB Garamond', 'Georgia', serif;
+            background: var(--parchment);
+            overflow-x: hidden;
+            color: var(--text);
+        }
+
+        /* ===== NAVBAR ===== */
+        #navbar {
+            background: linear-gradient(135deg, #0e0c06 0%, #1a1208 50%, #2d1b0a 100%);
+            color: white;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.7);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: 58px;
+            border-bottom: 1px solid rgba(184,147,58,0.3);
+        }
+
+        #navbar-brand { display: flex; align-items: center; gap: 14px; }
+        #navbar-brand .logo-text {
+            font-family: 'Cinzel', serif;
+            font-size: 1.05em;
+            font-weight: 600;
+            color: var(--gold-light);
+            letter-spacing: 1.5px;
+        }
+        #navbar-brand .logo-sub {
+            font-family: 'EB Garamond', serif;
+            font-size: 0.75em;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        #nav-buttons button {
+            background: rgba(122, 44, 44, 0.7);
+            color: #f0e8d4;
+            border: 1px solid rgba(184,147,58,0.35);
+            padding: 8px 18px;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.78em;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        #nav-buttons button:hover {
+            background: var(--crimson);
+            border-color: var(--gold-light);
+        }
+
+        /* ===== VIEWS ===== */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* ===== HOME VIEW ===== */
+        #home-view { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+
+        .home-hero {
+            text-align: center;
+            margin-bottom: 54px;
+            padding: 64px 40px;
+            background: linear-gradient(160deg, #0e0c06 0%, #1a1208 40%, #2d1b0a 100%);
+            border-radius: 4px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(184,147,58,0.2);
+        }
+
+        .home-hero::before {
+            content: '"';
+            position: absolute;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 500px;
+            color: rgba(184,147,58,0.04);
+            top: -120px; left: -30px;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .home-hero .ornament {
+            font-family: 'Cinzel', serif;
+            font-size: 0.75em;
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            opacity: 0.85;
+        }
+
+        .home-hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.4em;
+            font-weight: 600;
+            color: #f0e8d4;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .home-hero .hero-subtitle {
+            font-family: 'EB Garamond', serif;
+            font-size: 1.2em;
+            color: var(--gold-light);
+            font-style: italic;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .hero-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 24px auto;
+        }
+
+        .home-hero .hero-desc {
+            color: #ccc;
+            max-width: 720px;
+            margin: 0 auto;
+            line-height: 1.9;
+            font-size: 1em;
+            position: relative;
+        }
+
+        .hero-bio {
+            margin-top: 32px;
+            padding: 24px 32px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(184,147,58,0.15);
+            border-radius: 4px;
+            max-width: 780px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+
+        .hero-bio .bio-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7em;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .hero-bio p {
+            font-size: 0.92em;
+            line-height: 1.85;
+            color: #bbb;
+        }
+
+        .itinerari-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+        }
+
+        .itinerario-card {
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            transition: all 0.4s;
+            cursor: pointer;
+            border: 1px solid var(--parchment-dark);
+        }
+        .itinerario-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+        }
+
+        .card-image {
+            height: 210px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .card-image-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.6));
+        }
+        .card-badge {
+            position: absolute; top: 14px; right: 14px;
+            background: rgba(122,44,44,0.92);
+            color: white; padding: 4px 14px;
+            border-radius: 2px; font-size: 0.75em;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px; z-index: 1;
+        }
+        .card-personaggio {
+            position: absolute; bottom: 14px; left: 14px;
+            color: white; z-index: 1;
+        }
+        .card-personaggio strong { font-size: 1.05em; text-shadow: 0 1px 4px rgba(0,0,0,0.8); font-family: 'Cormorant Garamond', serif; }
+        .card-personaggio span { font-size: 0.82em; opacity: 0.85; font-style: italic; }
+
+        .card-content { padding: 28px; }
+        .card-content h3 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--ink);
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-subtitle { color: var(--crimson); font-size: 0.88em; margin-bottom: 12px; font-style: italic; }
+        .card-description { color: #555; line-height: 1.7; margin-bottom: 18px; font-size: 0.92em; }
+
+        .card-stats {
+            display: flex; justify-content: space-between; margin-bottom: 20px;
+            padding: 14px 0; border-top: 1px solid var(--parchment-dark);
+            border-bottom: 1px solid var(--parchment-dark);
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.1em; font-weight: 600; color: var(--crimson); font-family: 'Cormorant Garamond', serif; }
+        .stat-label { font-size: 0.75em; color: #999; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+
+        .card-button {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 100%);
+            color: white; border: none; border-radius: 3px;
+            font-size: 0.9em; font-family: 'Cinzel', serif;
+            letter-spacing: 1px; cursor: pointer; transition: all 0.3s;
+        }
+        .card-button:hover { box-shadow: 0 6px 20px rgba(122,44,44,0.4); }
+
+        /* ===== ITINERARY VIEW ===== */
+        #itinerary-view { display: flex; height: calc(100vh - 58px); }
+
+        /* Timeline */
+        #timeline-sidebar {
+            width: 270px;
+            background: linear-gradient(180deg, #0e0c06 0%, #1a1208 60%, #2d1b0a 100%);
+            color: white; padding: 20px 16px;
+            overflow-y: auto; flex-shrink: 0;
+            box-shadow: 3px 0 16px rgba(0,0,0,0.5);
+            border-right: 1px solid rgba(184,147,58,0.15);
+        }
+
+        #timeline-personaggio {
+            text-align: center; padding-bottom: 16px;
+            border-bottom: 1px solid rgba(184,147,58,0.25); margin-bottom: 16px;
+        }
+        #timeline-personaggio .pers-nome {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.05em; font-weight: 600; color: var(--gold-light);
+        }
+        #timeline-personaggio .pers-anni { font-size: 0.78em; color: #aaa; font-style: italic; }
+
+        #timeline-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.72em; color: var(--gold); text-transform: uppercase;
+            letter-spacing: 2px; margin-bottom: 8px;
+        }
+
+        #progress-bar {
+            background: rgba(255,255,255,0.08); height: 3px;
+            border-radius: 2px; margin-bottom: 18px; overflow: hidden;
+        }
+        #progress-fill {
+            background: linear-gradient(90deg, var(--gold), var(--crimson));
+            height: 100%; width: 0%; transition: width 0.6s ease;
+        }
+
+        .timeline-item {
+            padding: 11px 12px; margin-bottom: 8px;
+            border-radius: 3px; border-left: 2px solid transparent;
+            cursor: pointer; transition: all 0.25s;
+        }
+        .timeline-item:hover { background: rgba(255,255,255,0.06); }
+        .timeline-item.completed { border-left-color: var(--gold); background: rgba(184,147,58,0.07); }
+        .timeline-item.current { border-left-color: var(--crimson); background: rgba(122,44,44,0.18); }
+        .timeline-item.upcoming { border-left-color: rgba(255,255,255,0.1); opacity: 0.5; }
+
+        .timeline-icon { font-size: 1.5em; margin-bottom: 2px; }
+        .timeline-time { font-family: 'Cinzel', serif; font-size: 0.75em; color: var(--gold-light); font-weight: 600; }
+        .timeline-name { font-family: 'EB Garamond', serif; font-size: 0.9em; margin-top: 3px; line-height: 1.3; }
+        .timeline-duration { font-size: 0.72em; color: #888; font-family: 'Cinzel', serif; }
+
+        /* Main Content */
+        #itinerary-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #map-container { flex: 1; min-height: 0; position: relative; }
+        #map { width: 100%; height: 100%; }
+
+        /* Tappa Details */
+        #tappa-details {
+            height: 52%;
+            background: var(--parchment);
+            padding: 22px 28px;
+            overflow-y: auto;
+            box-shadow: 0 -6px 24px rgba(0,0,0,0.14);
+            border-top: 3px solid var(--crimson);
+        }
+
+        #tappa-header {
+            display: flex; align-items: flex-start;
+            gap: 18px; margin-bottom: 18px;
+            padding-bottom: 16px; border-bottom: 1px solid var(--parchment-dark);
+        }
+        #tappa-numero {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.8em; color: var(--crimson);
+            font-weight: 600; line-height: 1; opacity: 0.7;
+            min-width: 58px;
+        }
+        #tappa-nome { flex: 1; }
+        #tappa-nome h2 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--ink); font-size: 1.85em;
+            font-weight: 600; margin-bottom: 4px;
+        }
+        #tappa-nome .descrizione-breve { color: var(--muted); font-size: 0.9em; font-style: italic; line-height: 1.5; }
+
+        #tappa-orario { text-align: right; }
+        #tappa-orario .time {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.7em; color: var(--crimson); font-weight: 600;
+        }
+        #tappa-orario .moment { font-size: 0.82em; color: #999; margin-top: 2px; }
+        #tappa-orario .durata { font-size: 0.78em; color: #bbb; margin-top: 2px; }
+
+        /* AUDIO PLAYER */
+        .audio-player {
+            background: linear-gradient(135deg, #0e0c06, #1a1208);
+            border: 1px solid rgba(184,147,58,0.25);
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .audio-player::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent, transparent 2px,
+                rgba(184,147,58,0.015) 2px, rgba(184,147,58,0.015) 4px
+            );
+        }
+        .audio-icon {
+            font-size: 2em;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .audio-info {
+            flex: 1;
+            position: relative;
+        }
+        .audio-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.72em;
+            color: var(--gold);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .audio-subtitle {
+            font-family: 'EB Garamond', serif;
+            font-size: 0.9em;
+            color: #ccc;
+            font-style: italic;
+        }
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 8px;
+            height: 18px;
+        }
+        .wave-bar {
+            width: 3px;
+            background: var(--gold);
+            border-radius: 2px;
+            opacity: 0.4;
+            transition: all 0.2s;
+        }
+        .wave-bar.active {
+            opacity: 1;
+            animation: waveAnim 0.8s ease-in-out infinite alternate;
+        }
+        @keyframes waveAnim {
+            from { height: 4px; }
+            to { height: 16px; }
+        }
+        .audio-controls { display: flex; gap: 8px; position: relative; }
+        .audio-btn {
+            background: rgba(122,44,44,0.8);
+            border: 1px solid rgba(184,147,58,0.3);
+            color: white;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s;
+            flex-shrink: 0;
+        }
+        .audio-btn:hover { background: var(--crimson); border-color: var(--gold); transform: scale(1.08); }
+        .audio-btn.playing { background: var(--crimson); border-color: var(--gold-light); }
+        .audio-speed-btn {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #aaa;
+            padding: 6px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.7em;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+        }
+        .audio-speed-btn:hover { color: var(--gold-light); border-color: rgba(184,147,58,0.3); }
+
+        /* Section Cards */
+        .section-card {
+            margin-bottom: 16px; padding: 18px 20px;
+            background: white; border-radius: 4px;
+            border-left: 3px solid var(--crimson);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .section-card.blue { border-left-color: #2c5f8a; }
+        .section-card.green { border-left-color: #2c6e3f; }
+        .section-card.gold { border-left-color: var(--gold); }
+        .section-card.dark { border-left-color: var(--ink); background: #fdfaf5; }
+        .section-card.purple { border-left-color: #5c3a7a; }
+
+        .section-card h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8em; margin-bottom: 12px;
+            color: var(--ink); display: flex;
+            align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Citazione */
+        .citazione-box {
+            background: linear-gradient(160deg, #0e0c06, #1a1208, #2d1b0a);
+            color: white; padding: 22px 28px;
+            border-radius: 4px; margin-bottom: 16px;
+            position: relative; overflow: hidden;
+            border: 1px solid rgba(184,147,58,0.15);
+        }
+        .citazione-box::before {
+            content: '\201C';
+            position: absolute;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 100px; color: rgba(184,147,58,0.15);
+            top: -10px; left: 14px; line-height: 1;
+        }
+        .citazione-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.12em; font-style: italic;
+            line-height: 1.85; color: #f0e8d4;
+            margin-bottom: 12px; padding-left: 36px;
+        }
+        .citazione-fonte { text-align: right; color: var(--gold-light); font-size: 0.85em; font-style: normal; }
+        .citazione-contesto {
+            margin-top: 12px; padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.85em; color: #bbb; line-height: 1.7;
+        }
+
+        /* Narrativa profonda */
+        .narrativa-block {
+            font-family: 'EB Garamond', serif;
+            font-size: 0.97em; line-height: 1.85;
+            color: #3a2a18; margin-bottom: 12px;
+        }
+
+        .narrativa-block + .narrativa-block { margin-top: -4px; }
+
+        .highlight-phrase {
+            background: linear-gradient(180deg, transparent 60%, rgba(184,147,58,0.2) 60%);
+            font-style: italic;
+        }
+
+        /* Atmosfera */
+        .atmosfera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px; margin-top: 10px;
+        }
+        .atm-item {
+            background: var(--parchment); padding: 12px;
+            border-radius: 3px; text-align: center;
+            border: 1px solid var(--parchment-dark);
+        }
+        .atm-item .atm-icon { font-size: 1.6em; margin-bottom: 4px; }
+        .atm-item .atm-label { font-family: 'Cinzel', serif; font-size: 0.68em; color: #999; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .atm-item .atm-value { font-family: 'EB Garamond', serif; font-size: 0.88em; font-weight: 600; color: #333; }
+
+        /* Arte */
+        .arte-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .arte-field { font-size: 0.88em; line-height: 1.5; }
+        .arte-field .field-label { font-family: 'Cinzel', serif; color: #999; font-size: 0.82em; display: block; letter-spacing: 0.5px; }
+        .arte-field .field-val { color: #333; font-weight: 600; }
+
+        .opere-list { margin-top: 12px; }
+        .opera-item {
+            padding: 7px 12px; background: var(--parchment);
+            border-radius: 3px; margin-bottom: 5px;
+            font-size: 0.88em; color: #444;
+            border-left: 2px solid var(--gold); font-style: italic;
+        }
+
+        /* AI Layer */
+        .ai-box {
+            background: linear-gradient(135deg, #0a0e14, #0e1520);
+            color: white; padding: 18px 20px;
+            border-radius: 4px; margin-bottom: 16px;
+            border: 1px solid rgba(100,160,220,0.15);
+        }
+        .ai-box h3 {
+            color: #7ab8e8; margin-bottom: 12px;
+            font-family: 'Cinzel', serif; font-size: 0.8em;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .ai-prompt {
+            font-size: 0.88em; line-height: 1.75; color: #ccc;
+            font-style: italic; margin-bottom: 12px;
+            padding: 12px 14px; background: rgba(255,255,255,0.04);
+            border-radius: 3px; border-left: 2px solid #7ab8e8;
+        }
+        .ai-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+        .ai-tag {
+            background: rgba(122,184,232,0.1);
+            border: 1px solid rgba(122,184,232,0.25);
+            color: #7ab8e8; padding: 3px 10px;
+            border-radius: 20px; font-size: 0.78em; font-family: 'Cinzel', serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* Storia */
+        .storia-text {
+            font-family: 'EB Garamond', serif;
+            font-size: 0.92em; line-height: 1.82; color: #3a2a18; margin-bottom: 10px;
+        }
+        .curiosita-box {
+            background: #fffbee; border: 1px solid #e4d080;
+            padding: 12px 14px; border-radius: 3px;
+            font-size: 0.88em; line-height: 1.65; color: #555; margin-top: 8px;
+        }
+
+        /* Connessione letteraria */
+        .connessione-box {
+            background: linear-gradient(135deg, #1a0f0f, #2a1515);
+            border: 1px solid rgba(122,44,44,0.3);
+            padding: 16px 18px; border-radius: 4px; margin-bottom: 14px;
+        }
+        .connessione-box .conn-title {
+            font-family: 'Cinzel', serif; font-size: 0.75em;
+            color: var(--gold); letter-spacing: 1.5px;
+            text-transform: uppercase; margin-bottom: 10px;
+        }
+        .connessione-box p {
+            font-family: 'EB Garamond', serif;
+            font-size: 0.92em; line-height: 1.8; color: #ccc;
+        }
+        .conn-chars {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+        }
+        .conn-char {
+            background: rgba(122,44,44,0.3); border: 1px solid rgba(122,44,44,0.4);
+            color: #e8c8c8; padding: 3px 10px; border-radius: 2px;
+            font-size: 0.8em; font-family: 'Cinzel', serif; letter-spacing: 0.5px;
+        }
+
+        /* Meta */
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .meta-item { font-size: 0.85em; line-height: 1.5; }
+        .meta-label { font-family: 'Cinzel', serif; color: #999; font-size: 0.8em; display: block; letter-spacing: 0.5px; }
+        .meta-val { color: #333; }
+
+        /* Nav buttons */
+        #tappa-navigation {
+            display: flex; gap: 14px; margin-top: 22px;
+            padding-top: 18px; border-top: 1px solid var(--parchment-dark);
+        }
+        .nav-btn {
+            flex: 1; padding: 13px; border: none;
+            border-radius: 3px; font-size: 0.85em;
+            font-family: 'Cinzel', serif; letter-spacing: 1px;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .nav-btn.prev { background: var(--parchment-dark); color: var(--muted); border: 1px solid #ccc; }
+        .nav-btn.prev:hover { background: #d4c8b0; }
+        .nav-btn.next { background: linear-gradient(135deg, var(--crimson), var(--crimson-dark)); color: white; }
+        .nav-btn.next:hover { box-shadow: 0 4px 16px rgba(122,44,44,0.4); }
+        .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* Scrollbar */
+        #timeline-sidebar::-webkit-scrollbar, #tappa-details::-webkit-scrollbar { width: 5px; }
+        #timeline-sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        #timeline-sidebar::-webkit-scrollbar-thumb { background: rgba(184,147,58,0.35); border-radius: 3px; }
+        #tappa-details::-webkit-scrollbar-track { background: var(--parchment); }
+        #tappa-details::-webkit-scrollbar-thumb { background: rgba(122,44,44,0.25); border-radius: 3px; }
+
+        @media (max-width: 768px) {
+            #itinerary-view { flex-direction: column; }
+            #timeline-sidebar { width: 100%; height: 120px; display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; align-items: center; padding: 10px; }
+            #timeline-personaggio, #timeline-title, #progress-bar { display: none; }
+            .timeline-item { min-width: 115px; margin-bottom: 0; }
+            .itinerari-grid { grid-template-columns: 1fr; }
+            .arte-info, .meta-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="navbar">
+    <div id="navbar-brand">
+        <div>
+            <div class="logo-text">🏛 Roma che diventa ispirazione</div>
+            <div class="logo-sub">Itinerari Letterari · Nathaniel Hawthorne</div>
+        </div>
+    </div>
+    <div id="nav-buttons">
+        <button onclick="showView('home')">← Home</button>
+        <button id="back-btn" onclick="showView('itinerary')" style="display:none;">Torna all'Itinerario</button>
+    </div>
+</div>
+
+<!-- HOME VIEW -->
+<div id="home-view" class="view active">
+    <div class="home-hero">
+        <div class="ornament">✦ Roma che diventa ispirazione: una passeggiata su Nathaniel Hawthorne ✦</div>
+        <h1>Roma che diventa ispirazione</h1>
+        <div class="hero-subtitle">Sulle orme di Nathaniel Hawthorne e del Fauno di Marmo</div>
+        <div class="hero-divider"></div>
+        <p class="hero-desc">
+            Nel gennaio 1858, lo scrittore americano Nathaniel Hawthorne giunse a Roma con la sua famiglia e vi soggiornò per quasi un anno. La città lo ossessionò, lo spaventò, lo sedusse. Da quell'esperienza nacque <em>The Marble Faun</em> (1860), il suo ultimo grande romanzo, ambientato interamente tra le strade e i monumenti della città eterna. Questo itinerario ti guida attraverso i luoghi reali che Hawthorne visitò e che trasformò in letteratura.
+        </p>
+        <div class="hero-bio">
+            <div class="bio-title">✦ Chi era Nathaniel Hawthorne</div>
+            <p>Nato a Salem, Massachusetts nel 1804, Hawthorne è uno dei grandi maestri del romanticismo oscuro americano. Discendente di un giudice del processo alle streghe di Salem, portava il peso della colpa storica come un marchio. Le sue opere — <em>La Lettera Scarlatta</em> (1850), <em>La Casa dei Sette Frontoni</em> (1851) — esplorano il peccato, il segreto e la redenzione. Quando arrivò a Roma come console americano in pensione, aveva cinquantatré anni e cercava nell'arte classica una risposta alle domande morali che avevano tormentato tutta la sua scrittura.</p>
+        </div>
+    </div>
+    <div id="itinerari-container" class="itinerari-grid"></div>
+</div>
+
+<!-- ITINERARY VIEW -->
+<div id="itinerary-view" class="view">
+    <div id="timeline-sidebar">
+        <div id="timeline-personaggio">
+            <div class="pers-nome" id="pers-nome-sidebar"></div>
+            <div class="pers-anni" id="pers-anni-sidebar"></div>
+        </div>
+        <div id="timeline-title">Tappe dell'Itinerario</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div id="timeline-items"></div>
+    </div>
+
+    <div id="itinerary-content">
+        <div id="map-container"><div id="map"></div></div>
+        <div id="tappa-details">
+            <div id="tappa-header">
+                <div id="tappa-numero"></div>
+                <div id="tappa-nome">
+                    <h2></h2>
+                    <p class="descrizione-breve"></p>
+                </div>
+                <div id="tappa-orario">
+                    <div class="time"></div>
+                    <div class="moment"></div>
+                    <div class="durata"></div>
+                </div>
+            </div>
+            <div id="tappa-content"></div>
+            <div id="tappa-navigation">
+                <button class="nav-btn prev" onclick="previousTappa()">← Tappa Precedente</button>
+                <button class="nav-btn next" onclick="nextTappa()">Tappa Successiva →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+let currentUtterance = null;
+let isPlaying = false;
+let speechRate = 0.9;
+let activeWaveBars = [];
+
+function stopAudio() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    isPlaying = false;
+    updateAudioUI(false);
+}
+
+function updateAudioUI(playing) {
+    const btn = document.getElementById('audio-play-btn');
+    if (btn) {
+        btn.textContent = playing ? '⏸' : '▶';
+        btn.classList.toggle('playing', playing);
+    }
+    const bars = document.querySelectorAll('.wave-bar');
+    bars.forEach((b, i) => {
+        b.classList.toggle('active', playing);
+        if (playing) b.style.animationDelay = (i * 0.08) + 's';
+    });
+}
+
+function playAudioNarration(text) {
+    if (!window.speechSynthesis) {
+        alert('Il tuo browser non supporta la sintesi vocale. Prova Chrome o Edge per ascoltare la narrazione.');
+        return;
+    }
+    if (isPlaying) {
+        stopAudio();
+        return;
+    }
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'it-IT';
+    utter.rate = speechRate;
+    utter.pitch = 0.95;
+
+    // Prefer a good Italian voice
+    const voices = window.speechSynthesis.getVoices();
+    const itVoice = voices.find(v => v.lang.startsWith('it') && v.localService) ||
+                    voices.find(v => v.lang.startsWith('it'));
+    if (itVoice) utter.voice = itVoice;
+
+    utter.onstart = () => { isPlaying = true; updateAudioUI(true); };
+    utter.onend = () => { isPlaying = false; updateAudioUI(false); };
+    utter.onerror = () => { isPlaying = false; updateAudioUI(false); };
+
+    currentUtterance = utter;
+    window.speechSynthesis.speak(utter);
+}
+
+function cycleSpeed() {
+    const speeds = [0.75, 0.9, 1.0, 1.2];
+    const labels = ['0.75×', '0.9×', '1×', '1.2×'];
+    const currentIdx = speeds.indexOf(speechRate);
+    const nextIdx = (currentIdx + 1) % speeds.length;
+    speechRate = speeds[nextIdx];
+    const btn = document.getElementById('audio-speed-btn');
+    if (btn) btn.textContent = labels[nextIdx];
+    if (isPlaying && currentUtterance) {
+        const txt = currentUtterance.text;
+        stopAudio();
+        setTimeout(() => playAudioNarration(txt), 100);
+    }
+}
+
+// ============================================================
+// DATI COMPLETI
+// ============================================================
+const ITINERARI_DATA = [
+{
+    id: "hawthorne_roma",
+    nome: "Roma che diventa ispirazione",
+    sottotitolo: "Sulle orme di Nathaniel Hawthorne e del Fauno di Marmo",
+    personaggio: { nome: "Nathaniel Hawthorne", anni: "1804–1864", professione: "Scrittore" },
+    tema: "Letteratura",
+    descrizione: "Un percorso attraverso i quattro luoghi romani che Hawthorne visitò durante il soggiorno del 1858 e che confluirono nel romanzo The Marble Faun. Da Villa Borghese al Colosseo, una passeggiata tra arte, colpa e redenzione.",
+    durata_totale_ore: 10,
+    distanza_totale_km: 7.2,
+    costo_stimato: "€25–35",
+    tappe: [
+        {
+            numero: 1,
+            nome: "Villa Borghese",
+            coordinate: [41.9139, 12.4923],
+            orario_consigliato: "09:00",
+            momento_giornata: "mattino",
+            durata_visita_min: 120,
+            descrizione_breve: "Villa Borghese, il Fauno di Prassitele e la nascita del romanzo",
+            audio_narrazione: "Benvenuti a Villa Borghese, il grande giardino storico di Roma, luogo di quiete e ispirazione. Qui passeggiava lo scrittore americano Nathaniel Hawthorne, che proprio tra questi viali trovò l’atmosfera per il suo romanzo The Marble Faun: un ambiente sospeso tra natura, arte e mistero. Camminando nel parco, tra alberi e statue, si percepisce quella stessa sensazione di riflessione e scoperta che colpì Hawthorne, come se ogni angolo raccontasse una storia. All'interno di questo magnifico parco, troviamo Galleria Borghese. È qui, davanti al Fauno Danzante in marmo antico, che nacque l'ispirazione di Nathaniel Hawthorne per il suo ultimo grande romanzo. Immaginate lo scrittore americano — già anziano, già stanco — che si ferma davanti a questa scultura nel 1858. Vede nelle orecchie appuntite del fauno, nella sua espressione sospesa tra natura e umanità, un simbolo perfetto per la domanda che aveva ossessionato tutta la sua scrittura: che cosa significa il peccato? Il fauno ignora la distinzione tra bene e male. Non per perversione, ma per innocenza originaria. Hawthorne si chiede: il peccato è necessario per diventare umani? Questa domanda è il cuore del romanzo, e tutto nasce da questo momento, in questa sala.La passeggiata culmina al Pincio, da cui si apre una vista spettacolare su Roma: il passaggio perfetto dall’intimità del parco alla grandiosità della città. ",
+            storia: "Nathaniel Hawthorne visitò Villa Borghese, e conseguentemnete Galleria Borghese, nel febbraio 1858, poco dopo il suo arrivo a Roma. Nel suo taccuino scrisse lunghe annotazioni sulla scultura del Fauno Danzante attribuita a Prassitele, soffermandosi in particolare sulle orecchie appuntite — un dettaglio anatomico che, per uno scrittore americano educato al puritanesimo, suggeriva una natura incompiuta, situata prima della caduta morale. Hawthorne immaginò che una persona potesse assomigliare a questa statua — e da lì nacque il personaggio di Donatello, giovane italiano dal carattere selvaggio e premoderno, protagonista de *The Marble Faun*. Durante la passeggiata a Villa Borghese, Nathaniel Hawthorne vive uno stato d’animo raccolto e inquieto insieme: il silenzio del parco lo invita alla contemplazione, ma le ombre, le statue e i sentieri nascosti alimentano una sottile sensazione di mistero, quasi di ambiguità morale. Man mano che avanza, questa inquietudine si trasforma in consapevolezza. All’arrivo al Pincio, lo sguardo si apre sulla città e il suo animo si distende: il turbamento lascia spazio a una visione più ampia, dove bellezza e riflessione trovano un equilibrio.",
+            curiosita: "Hawthorne nel suo taccuino romano scrive: «Il Fauno è una cosa meravigliosamente bella. Ha le orecchie appuntite come un animale, eppure il volto è quello di un essere quasi umano... mi chiedo se non sia possibile che una tale creatura esista ancora tra le colline italiane.» Questa nota diventerà la sinossi del romanzo.",
+            esperienza_culturale: {
+                letteratura: {
+                    citazione: "Il Fauno di Prassitele è un essere meraviglioso — metà umano, metà animale — che suggerisce una vita ancora incompleta, non ancora entrata nell'orbita della coscienza morale.",
+                    autore: "Nathaniel Hawthorne",
+                    opera: "The Marble Faun",
+                    anno: "1860",
+                    contesto: "Hawthorne usa il Fauno come metafora dell'innocenza preadamica: la creatura che non conosce ancora il peccato originale, e che proprio per questo non è pienamente umana. Il romanzo esplora se la caduta morale — l'atto di peccare — sia paradossalmente necessaria allo sviluppo dell'anima."
+                },
+                narrativa_profonda: "Hawthorne arrivò a Roma nel gennaio 1858 carico di ambivalenza. Amava l'arte europea, ma diffidava di Roma come città corrotta, cattolica, sovraccarica di storia. Eppure fu la Galleria Borghese a colpirlo più di ogni altro luogo. Davanti al Fauno Danzante — probabilmente una copia romana di un originale greco — si fermò a lungo. Scrisse nel suo *Italian Notebooks* che la scultura sembrava contenere una domanda filosofica: esiste un'innocenza che precede la morale? E se sì, è davvero innocenza, o è solo ignoranza? Questi interrogativi diventarono l'architettura de *The Marble Faun*, dove Donatello — che assomiglia fisicamente alla statua — compie un atto violento che lo trasforma da creatura preumana in essere pienamente cosciente, capace di rimorso e quindi di redenzione.",
+                connessione_romanzo: {
+                    testo: "Donatello, il protagonista maschile del romanzo, è descritto dagli altri personaggi come un essere che sembra uscito direttamente da questa scultura. Lo scultore americano Kenyon — alter ego di Hawthorne — scopre che Donatello ha davvero le orecchie appuntite come un fauno. Questa anomalia fisica diventa il simbolo della sua natura ambigua: è un italiano dell'Appennino, ancora legato a una ruralità ancestrale, non ancora corrotto dalla storia.",
+                    personaggi: ["Donatello (il Fauno)", "Miriam (la pittrice misteriosa)", "Hilda (la copista americana)", "Kenyon (lo scultore)"]
+                },
+                atmosfera: {
+                    luce: "Mattutina, morbida",
+                    temperatura_stimata: "Fresca in inverno",
+                    affollamento: "Controllato (prenotazione obbligatoria per Galleria Borghese)",
+                    emozione_target: "Contemplazione e stupore",
+                    suoni_ambiente: ["Passi sul marmo", "Voci soffocate", "Silenzio della contemplazione"],
+                    consiglio_fotografico: "La sala del Fauno la mattina presto: la luce naturale dalla finestra crea ombre che accentuano la plasticità della scultura; corridoi alberati del parco la mattina, con i raggi del Sole che colpiscono il sentiero; vista di Roma dalla terrazza del Pincio, per cogliere la grandezza della città",
+                    vista_panoramica: "Dal giardino: il profilo della città verso il Gianicolo; Dalla terrazza del Pincio: la città di Roma nella sua maestosità"
+                },
+                arte_visiva: {
+                    descrizione: "Villa Borghese si manifesta soprattutto all’aperto, come un equilibrio tra natura e intervento umano. Statue, fontane e viali prospettici sono distribuiti nel parco per guidare lo sguardo e creare scenari armoniosi. Il risultato è un paesaggio “artistico”, dove ogni elemento contribuisce a un’esperienza visiva fatta di bellezza, ordine e suggestione, in cui l’arte si fonde con l’ambiente naturale. Per quanto riguarda Galleria Borghese, essa ospita una delle più straordinarie collezioni d'arte privata mai assemblate. Il cardinale Scipione Borghese — nipote di papa Paolo V — la costruì nel primo Seicento acquistando, a volte con metodi coercitivi, opere di Tiziano, Caravaggio, Raffaello e commissionando direttamente al giovane Gian Lorenzo Bernini alcune delle sue opere più stupefacenti: Apollo e Dafne, il Ratto di Proserpina, David.",
+                    stile_architettonico: "Prevalentemente classico e barocco, con elementi neoclassici, caratterizzato da armonia, simmetria e integrazione con il paesaggio naturale. Villa Borghese si presenta come una villa suburbana del primo Seicento",
+                    architetto: "Flaminio Ponzo e Giovanni Vasanzio (Jan van Santen)",
+                    anno_costruzione: "1605-1633 (Villa Borghese tra il 1613–1616)",
+                    committente: "Cardinale Scipione Borghese",
+                    opere_chiave: [
+                        "Cristoforo Unterberger e Vincenzo Pacetti, Fontana dei Cavalli Marini (1791)",
+                        "Luigi Canina, Fontana di Esculapio (1834)" ,
+                        "Luigi Canina, Ninfeo dei Leoni (XIX secolo)",
+                        "Bertel Thorvaldsen, Monumento a Lord Byron (1959)",
+                        "Gian Lorenzo Bernini, Apollo e Dafne (1623-1625)", 
+                        "Gian Lorenzo Bernini, Ratto di Proserpina (1621–22)",
+                        "Caravaggio, Madonna dei Palafrenieri (1605–06)",
+                        "Tiziano, Amor Sacro e Amor Profano (1514)",
+                        "Fauno Danzante (copia romana da orig. greco, II sec. d.C.)"
+                    ]
+                },
+                ai_layer: {
+                    prompt_ai_base: "Sei Nathaniel Hawthorne nel febbraio 1858. Sei appena entrato nella Galleria Borghese e ti avvicini al Fauno per la prima volta. Descrivi in prima persona la tua reazione — il conflitto interiore tra l'ammirazione estetica e il tuo background puritano, e la domanda morale che la scultura ti pone. Usa la prosa tarda di Hawthorne: riflessiva, densa di simboli, con quella caratteristica sospensione tra il reale e l'allegorico. Ora passseggi per i viali alberati di Villa Borghese, e il sole filtra tra i pini alti, creando giochi di luce sulle statue antiche e sulle fontane. Cammini lentamente lungo i viali curvati, osservando i dettagli dei busti e delle fontane, e senti un misto di curiosità e meraviglia: ogni angolo sembra custodire un piccolo mistero, ogni sentiero un racconto da scoprire. Lentamente, la tua attenzione si apre verso l’orizzonte. Arrivando al Pincio, la città di Roma si svela davanti a te: tetti, cupole, campanili che si intrecciano in un panorama mozzafiato. Il cuore si allarga, e con esso il pensiero si fa più chiaro: la bellezza e la storia del parco si fondono con la vastità della città, lasciandoti una sensazione di sospesa contemplazione, come se Villa Borghese fosse un ponte tra realtà e immaginazione, tra passeggiata e sogno.",
+                    tono: "Riflessivo, simbolico, puritano-romantico",
+                    temi_chiave: ["Innocenza preadamica", "Peccato e redenzione", "Arte come rivelazione morale", "L'americano in Europa", "Natura vs Civiltà"],
+                    citazioni_suggerite: ["Italian Notebooks (1858)", "The Marble Faun, cap. I", "The Marble Faun, cap. IX"]
+                }
+            },   
+            indicazioni_arrivo: "Dal centro storico, raggiungere piazzale Flaminio (metro A, fermata Flaminio). Da lì, entrare a Villa Borghese dal cancello principale e seguire il vialetto fino alla Galleria — circa 15 minuti a piedi attraverso il parco.",
+            tempo_spostamento_da_tappa_precedente: null,
+            metadata: {
+                accessibilita: "Accesso libero. Per Galleria Borghese: accesso con prenotazione obbligatoria (2 ore, turni fissi)",
+                orari_standard: "Lun-Dom 6:30-21-00 (varia per stagione); Galleria Borghese: Mart–Dom 9:00–19:00 (ultimo ingresso 17:00)",
+                avvertenza: "Prenotare con almeno una settimana di anticipo per ingresso alla Galleria Borghese",
+                biglietto_combinato: "Non disponibile",
+                servizi: ["Percorsi pedonali e ciclabili", "Noleggio biciclette e risciò", "Bar e caffetterie", "Servizi igienici pubblici", "Aree gioco per bambini", "Wi-Fi pubblico", "Informazioni turistiche", "Guardaroba", "Bookshop", "Audioguida disponibile"]
+            }
+        },
+        {
+            numero: 2,
+            nome: "Piazza di Spagna",
+            coordinate: [41.9058, 12.4823],
+            orario_consigliato: "11:30",
+            momento_giornata: "meta_mattina",
+            durata_visita_min: 90,
+            descrizione_breve: "La comunità degli artisti anglofoni e il peso dell'eredità romantica",
+            audio_narrazione: "Siamo ora a Piazza di Spagna, il cuore della comunità anglofona nella Roma del diciannovesimo secolo. Qui, al numero 26 della scalinata, si trova la casa dove John Keats morì nel 1821 a soli venticinque anni. Quando Hawthorne visitò questo appartamento, rimase profondamente turbato. Keats era morto a Roma cercando un clima più mite per la sua tubercolosi. Per Hawthorne, quella morte giovane in terra straniera era un simbolo potente: l'artista che arriva in Europa in cerca di bellezza e trova invece la sua fine. Nel romanzo, il personaggio di Hilda — la giovane pittrice americana — abita in una torre vicina, e dalla sua finestra osserva Roma senza mai appartenerle davvero. Come Hawthorne stesso.",
+            storia: "Piazza di Spagna era nel Settecento e nell'Ottocento il quartiere degli artisti e degli intellettuali stranieri a Roma. La comunità anglofona si concentrava attorno alla scalinata e al Caffè Greco di via Condotti. Hawthorne frequentò questo ambiente durante il suo soggiorno: incontrò scultori americani come William Wetmore Story, pittori inglesi e poeti. La Keats-Shelley House — aperta come museo nel 1909 — conserva manoscritti, lettere e cimeli dei poeti romantici inglesi morti in Italia.",
+            curiosita: "Nel suo taccuino, Hawthorne scrive di essersi seduto sui gradini della scalinata al tramonto e di aver osservato la fontana della Barcaccia. Nota che «Roma è una città che bisogna guardare lentamente, come si legge un libro difficile».",
+            esperienza_culturale: {
+                letteratura: {
+                    citazione: "Hilda era una giovane americana, pura come il marmo che copiava, incapace di comprendere l'ombra morale che si stendeva sul suo amico — eppure quella stessa purezza divenne, alla fine, il suo fardello più pesante.",
+                    autore: "Nathaniel Hawthorne",
+                    opera: "The Marble Faun",
+                    anno: "1860",
+                    contesto: "Hilda, giovane pittrice americana che vive in una torre con una fiamma perenne dedicata alla Madonna, incarna l'innocenza americana di fronte all'Europa corrotta. La sua vicenda nel romanzo è una meditazione sul confine tra purezza morale e complicità silenziosa."
+                },
+                narrativa_profonda: "Hawthorne era ossessionato dalla figura dell'artista americano in Europa — lo stesso tema che Henry James avrebbe poi sviluppato in forme più sottili. Piazza di Spagna era il luogo fisico di questa tensione: qui si incontravano gli americani che cercavano la bellezza classica, e qui si scontravano con il peso della storia europea. La morte di Keats in questo palazzo rappresenta per Hawthorne il pericolo dell'Europa: la sua bellezza è reale, ma è anche contagiosa, letale per chi non ha le radici per sopportarla. Hilda nel romanzo è immune — perché è troppo pura, troppo americana — ma quella immunità ha un costo: l'incapacità di comprendere la complessità morale.",
+                connessione_romanzo: {
+                    testo: "La torre di Hilda — immaginaria ma collocata da Hawthorne nel quartiere attorno a Piazza di Spagna — è uno dei simboli centrali del romanzo. Hilda, che copia i capolavori dei grandi maestri nella Galleria Vaticana, vive in questo quartiere di artisti stranieri ma mantiene una distanza assoluta dalla Roma 'vera'. Quando è costretta ad attraversare quella distanza, quasi non sopravvive all'impatto.",
+                    personaggi: ["Hilda (la copista americana)", "Miriam (che confida il suo segreto a Hilda)"]
+                },
+                atmosfera: {
+                    luce: "Brillante a metà mattina",
+                    temperatura_stimata: "Piacevole in tutte le stagioni",
+                    affollamento: "Molto affollata in estate",
+                    emozione_target: "Malinconia romantica, nostalgia",
+                    suoni_ambiente: ["Acqua della Barcaccia", "Voci internazionali", "Campane lontane"],
+                    consiglio_fotografico: "Dalla cima della scalinata verso piazza e via Condotti: la prospettiva che Hawthorne descrive nel taccuino."
+                },
+                arte_visiva: {
+                    descrizione: "La scalinata di Trinità dei Monti (1723–26) è una delle architetture più celebrate del Settecento romano, progettata da Francesco De Sanctis. Collega piazza di Spagna alla chiesa di Trinità dei Monti attraverso 135 gradini divisi in dodici rampe. La fontana della Barcaccia, ai piedi della scalinata, fu realizzata da Pietro Bernini (padre di Gian Lorenzo) intorno al 1627.",
+                    stile_architettonico: "Barocco romano",
+                    architetto: "Francesco De Sanctis",
+                    anno_costruzione: "1723–1726",
+                    opere_chiave: [
+                        "Francesco De Sanctis, Scalinata di Trinità dei Monti (1723–26)",
+                        "Pietro Bernini, Fontana della Barcaccia (1627)",
+                        "Keats-Shelley House: manoscritti autografi di Keats e Shelley"
+                    ]
+                },
+                ai_layer: {
+                    prompt_ai_base: "Sei Nathaniel Hawthorne nell'estate del 1858. Hai appena visitato l'appartamento dove Keats è morto. Scrivi in prima persona una riflessione: che cosa significa per un artista americano — protestante, privo di storia — confrontarsi con questa morte giovane in terra europea? Come si relaziona alla tua stessa paura che l'Europa possa 'corrompere' l'immaginazione americana? Usa il tono dei *Notebooks* italiani di Hawthorne.",
+                    tono: "Elegiaco, malinconico, difensivo",
+                    temi_chiave: ["L'americano in Europa", "Arte e mortalità", "Purezza vs Corruzione", "La figura dell'artista esiliato", "Innocenza americana"]
+                }
+            },
+            indicazioni_arrivo: "Da Villa Borghese: scendere per viale Trinità dei Monti fino alla scalinata, circa 25 minuti a piedi attraverso il parco. Oppure taxi/bus dal cancello del parco.",
+            tempo_spostamento_da_tappa_precedente: { a_piedi: "25 min", distanza_km: "1.8" },
+            metadata: {
+                accessibilita: "Scalinata gratuita. Keats-Shelley House: ingresso a pagamento",
+                orari_standard: "Keats-Shelley House: Lun–Sab 10:00–13:00 / 14:00–18:00",
+                servizi: ["Caffè Greco (via Condotti 86, dal 1760)", "Numerosi bar e ristoranti nella zona"]
+            }
+        },
+        {
+            numero: 3,
+            nome: "Pantheon",
+            coordinate: [41.8986, 12.4769],
+            orario_consigliato: "14:00",
+            momento_giornata: "pomeriggio",
+            durata_visita_min: 90,
+            descrizione_breve: "L'occhio di Dio: luce, tempo e la Roma pagana",
+            audio_narrazione: "Siamo al Pantheon, e Hawthorne ci scrisse pagine memorabili. Quando entrò qui nel 1858, quello che lo colpì non fu la grandezza architettonica in sé, ma l'oculus — quell'apertura circolare al centro della cupola, larga quasi nove metri, attraverso cui la luce entra verticalmente e si sposta lentamente sul pavimento come uno gnomone gigante. Hawthorne scrisse nel suo taccuino che la luce del Pantheon era 'la più onesta di Roma' — non filtrata da vetri colorati, non separata dal mondo. Diretta. Come la verità. Per uno scrittore ossessionato dalla luce e dall'ombra come metafore morali, questo luogo era una rivelazione. Nel romanzo, il Pantheon appare come il luogo dove passato e presente convivono — dove la Roma pagana e quella cristiana si sovrappongono in modo inestricabile.",
+            storia: "Il Pantheon fu costruito dall'imperatore Adriano tra il 118 e il 125 d.C. sul sito di un tempio precedente fatto edificare da Agrippa nel 27 a.C. (come ricorda l'iscrizione sul frontone). La cupola in calcestruzzo — con un diametro di 43,3 metri, uguale all'altezza interna — rimase per diciassette secoli la più grande mai costruita. Nel 609, papa Bonifacio IV lo consacrò come chiesa cristiana, dedicandola alla Madonna e a tutti i martiri: questa trasformazione lo salvò dalla demolizione. Raffaello scelse il Pantheon come sua tomba nel 1520.",
+            curiosita: "L'oculus del Pantheon è l'unica fonte di luce e anche il punto di aerazione dell'edificio. Quando piove, l'acqua entra attraverso l'oculus e defluisce attraverso un sistema di drenaggio nascosto sotto il pavimento in marmo. Il 21 aprile — anniversario tradizionale della fondazione di Roma — a mezzogiorno il fascio di luce dell'oculus illumina esattamente l'ingresso principale.",
+            esperienza_culturale: {
+                letteratura: {
+                    citazione: "Il Pantheon ci insegna che la Roma pagana non è mai davvero morta: è sopravvissuta nelle sue stesse pietre, trasformata ma non cancellata, come un carattere antico che traspare attraverso la pagina di un manoscritto riscritto.",
+                    autore: "Nathaniel Hawthorne",
+                    opera: "Italian Notebooks",
+                    anno: "1858",
+                    contesto: "Hawthorne era affascinato e turbato dalla stratificazione storica di Roma. Come puritano, la coesistenza di paganesimo e cattolicesimo nello stesso spazio fisico lo inquietava: sembrava dimostrare che il passato non muore mai, che i peccati storici rimangono attivi nel presente."
+                },
+                narrativa_profonda: "Il Pantheon rappresenta per Hawthorne il paradosso romano per eccellenza: un tempio pagano diventato chiesa cristiana, dove Raffaello — il pittore della Madonna — è sepolto accanto agli antichi dei. Per uno scrittore americano cresciuto nel protestantesimo puritano, questa stratificazione era quasi scandalosa. L'America era nata come rottura col passato europeo, come tentativo di ricominciare da zero. Roma era l'esatto opposto: una città dove il passato non si lasciava mai dimenticare, dove ogni pietra conteneva strati di storia, colpa, bellezza. Nel romanzo, questa tensione è incarnata da Miriam — una pittrice dall'identità misteriosa, perseguitata da un passato che non riesce a cancellare. Come Roma.",
+                connessione_romanzo: {
+                    testo: "Nel *The Marble Faun*, Roma stessa diventa un personaggio. Hawthorne la descrive come una città che assorbe i suoi visitatori, li trasforma, li 'contamina' con la sua storia. Il Pantheon — con la sua coesistenza di sacro e pagano, di bellezza e morte — è la metafora architettonica di questa Roma che non lascia andare.",
+                    personaggi: ["Miriam (la pittrice dal passato oscuro)", "Donatello (che si corrompe nell'ombra di Roma)"]
+                },
+                atmosfera: {
+                    luce: "Luce diretta dall'oculus, drammatica",
+                    temperatura_stimata: "Fresca in estate grazie alla massa muraria",
+                    affollamento: "Molto frequentato, arrivare presto",
+                    emozione_target: "Meraviglia, vertigo storico",
+                    suoni_ambiente: ["Eco dei passi sulla pietra", "Voci che rimbalzano sulla cupola", "Silenzio improvviso verso il centro"],
+                    consiglio_fotografico: "Posizionarsi sotto l'oculus e fotografare verso l'alto: il cerchio di cielo che cambia con le nuvole è irripetibile.",
+                    vista_panoramica: "Piazza della Rotonda: i portici barocchi di fronte creano una quinta teatrale"
+                },
+                arte_visiva: {
+                    descrizione: "La cupola del Pantheon è un capolavoro di ingegneria romana: realizzata in calcestruzzo con aggregati sempre più leggeri man mano che si sale verso l'oculus, è strutturalmente autoportante. Lo spazio interno è perfettamente sferico: una sfera di 43,3 metri di diametro si inserirebbe esattamente. Il pavimento in marmo colorato è quasi interamente originale romano.",
+                    stile_architettonico: "Architettura romana imperiale",
+                    architetto: "Imperatore Adriano (con maestranze anonime)",
+                    anno_costruzione: "118–125 d.C.",
+                    committente: "Imperatore Adriano",
+                    opere_chiave: [
+                        "Tomba di Raffaello Sanzio (m. 1520)",
+                        "Tomba di Baldassarre Peruzzi (m. 1536)",
+                        "Pavimento originale in marmo policromo (II sec. d.C.)"
+                    ],
+                    dati_chiave: { "Diametro cupola": "43.3 m", "Altezza interna": "43.3 m", "Diametro oculus": "8.7 m", "Spessore cupola (base)": "6 m" }
+                },
+                ai_layer: {
+                    prompt_ai_base: "Sei Nathaniel Hawthorne in piedi sotto l'oculus del Pantheon. Il raggio di luce si sposta lentamente. Scrivi in prima persona una meditazione sulla stratificazione storica del luogo — pagano e cristiano, bellezza e morte, passato che non lascia andare il presente. Come si relaziona questa esperienza alla tua ossessione letteraria per il peccato che non si può cancellare? Usa un registro filosofico ma concreto, ancorato alla sensazione fisica della luce.",
+                    tono: "Filosofico, simbolico, sensualmente concreto",
+                    temi_chiave: ["Stratificazione storica", "Paganesimo sopravvissuto", "Luce come rivelazione morale", "Il passato nel presente", "L'americano senza storia"]
+                }
+            },
+            indicazioni_arrivo: "Da Piazza di Spagna: scendere verso il centro storico attraverso via della Croce e via Condotti, poi verso via del Corso e attraverso i vicoli verso piazza della Rotonda. Circa 25 minuti a piedi.",
+            tempo_spostamento_da_tappa_precedente: { a_piedi: "25 min", distanza_km: "1.5" },
+            metadata: {
+                accessibilita: "Dal 2023: ingresso a pagamento (€5, gratuito sotto i 18 anni EU)",
+                orari_standard: "Lun–Dom 9:00–19:00",
+                avvertenza: "Vietato l'ingresso in pantaloncini o spalle scoperte (è chiesa attiva)",
+                servizi: ["Caffè e ristoranti in piazza della Rotonda", "Visita raccomandata la mattina presto"]
+            }
+        },
+        {
+            numero: 4,
+            nome: "Colosseo",
+            coordinate: [41.8902, 12.4922],
+            orario_consigliato: "17:00",
+            momento_giornata: "tramonto",
+            durata_visita_min: 120,
+            descrizione_breve: "La scena finale: il Male, la redenzione e il tramonto di Roma",
+            audio_narrazione: "Siamo al Colosseo al tramonto, e questa è la tappa più drammatica del nostro itinerario hawtorniano. È qui, in questa arena, che si svolge una delle scene cruciali del Marble Faun. Donatello — il giovane fauno che ha già commesso il suo delitto — torna al Colosseo di notte, come se il luogo stesso lo chiamasse. Hawthorne scrisse che il Colosseo al chiaro di luna era 'il luogo più bello del mondo'. Un paradosso straziante: la costruzione più bella di Roma era anche l'arena in cui erano morti migliaia di esseri umani. Per Hawthorne, questo era il nodo centrale di tutta la storia europea: la bellezza costruita sulla sofferenza. Il tramonto ora trasforma le pietre in oro. Guardatelo: capite perché non riuscì mai a smettere di scriverne.",
+            storia: "Il Colosseo — ufficialmente Anfiteatro Flavio — fu costruito tra il 70 e l'80 d.C. sotto gli imperatori Vespasiano e Tito. Poteva ospitare tra 50.000 e 80.000 spettatori. I giochi gladiatori continuarono fino al 435 d.C.; le venationes (cacce agli animali) fino al 523. Nel Medioevo l'edificio fu trasformato in fortezza, poi in cava di pietra. Solo nel Settecento, con papa Benedetto XIV, il Colosseo fu consacrato come luogo sacro in memoria dei martiri cristiani morti nell'arena (sebbene questa tradizione storica sia oggi considerata dubbia). Hawthorne lo visitò più volte durante il suo soggiorno, di giorno e — come scrisse nel taccuino — anche di notte, alla luce della luna.",
+            curiosita: "Nel capitolo 'Miriam and Donatello' del *Marble Faun*, Hawthorne ambienta una scena notturna nel Colosseo in cui i personaggi sembrano liberati dalle costrizioni diurne della morale sociale. La notte e le rovine creano uno spazio 'fuori dal tempo' in cui le azioni hanno un peso diverso. Questa scena è considerata una delle più memorabili della letteratura americana dell'Ottocento.",
+            esperienza_culturale: {
+                letteratura: {
+                    citazione: "Il Colosseo al chiaro di luna è il più bello dei monumenti romani — e il più terribile. La sua bellezza non può essere separata dal suo orrore, come non si può separare il marmo dall'acqua che ha scavato quella forma nel tempo.",
+                    autore: "Nathaniel Hawthorne",
+                    opera: "Italian Notebooks",
+                    anno: "1858",
+                    contesto: "Hawthorne tornò al Colosseo più volte durante il soggiorno romano, spesso la sera. Il luogo rappresentava per lui il nodo inscioglibile della civiltà: bellezza e violenza costruite insieme, indistricabili. Questa ambivalenza è al centro di tutta la sua riflessione sull'arte europea."
+                },
+                narrativa_profonda: "La scena notturna al Colosseo nel *Marble Faun* è una delle pagine più ambiziose di Hawthorne. Donatello e Miriam — già uniti dall'atto criminale che hanno commesso insieme — si incontrano in questo spazio fuori dal tempo, circondati dalle pietre di duemila anni di storia violenta. Hawthorne usa il Colosseo come allegoria della condizione umana: siamo costruiti su strati di colpa storica; la nostra bellezza — come quella di Roma — è inseparabile dalla sofferenza che l'ha prodotta. Per uno scrittore americano ossessionato dalla trasmissione del peccato attraverso le generazioni (tema che aveva esplorato ne *La Lettera Scarlatta*), Roma offriva una conferma architettonica: il peccato si stratifica nelle pietre, sopravvive ai secoli, non si cancella mai davvero. Ma Hawthorne aggiunge una nota di speranza: anche la redenzione è possibile. Donatello, che ha conosciuto il peccato, diventa per la prima volta pienamente umano.",
+                connessione_romanzo: {
+                    testo: "Il Colosseo nel romanzo è lo spazio dove la trama raggiunge il suo apice drammatico e poi inizia il percorso verso la risoluzione. La violenza commessa in questo luogo — o nelle sue vicinanze — non è casuale: Hawthorne sceglie l'arena più sanguinosa della storia per ambientare un atto che cambierà irreversibilmente tutti i personaggi. Come se il luogo stesso richiedesse quel tributo.",
+                    personaggi: ["Donatello (trasformato dall'atto violento)", "Miriam (la pittrice complice)", "Il Modello (il misterioso persecutore)"]
+                },
+                atmosfera: {
+                    luce: "Ore dorate del tramonto, poi magia serale",
+                    temperatura_stimata: "Piacevole al tramonto",
+                    affollamento: "Molto frequentato di giorno, più tranquillo la sera",
+                    emozione_target: "Sublimità, malinconia storica",
+                    suoni_ambiente: ["Vento tra le arcate", "Eco della città lontana", "Silenzio improvviso dentro l'arena"],
+                    consiglio_fotografico: "Dal Palatino, guardando il Colosseo al tramonto: la luce arancione trasforma le pietre in fuoco, esattamente come Hawthorne descrive.",
+                    vista_panoramica: "Dal terzo livello del Colosseo: il Foro Romano, il Palatino, la città moderna"
+                },
+                arte_visiva: {
+                    descrizione: "L'Anfiteatro Flavio è un capolavoro di architettura e ingegneria romana. La struttura ellittica (188×156 metri) è costruita su una complessa rete di volte in calcestruzzo. La facciata a tre livelli di arcate incornicia semicolonne di ordine dorico, ionico e corinzio rispettivamente. Sotto l'arena, il *hypogeum* — un labirinto di corridoi e stanze — ospitava gladiatori, animali e macchinari scenici.",
+                    stile_architettonico: "Architettura romana imperiale",
+                    anno_costruzione: "70–80 d.C.",
+                    committente: "Imperatori Vespasiano e Tito",
+                    dati_chiave: { "Capienza": "50.000–80.000 spettatori", "Assi": "188 m × 156 m", "Altezza": "48–50 m", "Arcate totali": "80" }
+                },
+                ai_layer: {
+                    prompt_ai_base: "Sei Nathaniel Hawthorne al Colosseo al tramonto, verso la fine del tuo soggiorno romano nel 1858. Sai che stai per lasciare Roma. Scrivi in prima persona un addio a questo luogo — mescolando la bellezza che hai trovato con il turbamento morale che hai sentito, la sensazione che Roma ti abbia cambiato senza che tu abbia potuto resisterle. Come si collega questa esperienza all'archetipo che hai creato in Donatello: la caduta come necessità per la crescita dell'anima?",
+                    tono: "Elegiaco, definitivo, riconciliato",
+                    temi_chiave: ["Il sublime della rovina", "Bellezza e violenza indistricabili", "La caduta come crescita", "L'addio all'Europa", "Peccato originale e storia"]
+                }
+            },
+            indicazioni_arrivo: "Dal Pantheon: percorrere via del Gesù e poi seguire via dei Fori Imperiali verso il Colosseo. Circa 25 minuti a piedi attraverso il centro storico, passando per piazza Venezia.",
+            tempo_spostamento_da_tappa_precedente: { a_piedi: "25 min", metro: "15 min (linea B, fermata Colosseo)", distanza_km: "2.1" },
+            metadata: {
+                accessibilita: "Biglietto unico Colosseo + Foro Romano + Palatino",
+                orari_standard: "Apertura al tramonto: ideale per l'esperienza hawtorniana",
+                avvertenza: "La visita serale (fino a 22:30 in estate) è altamente consigliata",
+                biglietto_combinato: "€18 (include Foro Romano e Palatino, valido 2 giorni)",
+                servizi: ["Audioguida disponibile", "Tour guidati in italiano e inglese"]
+            }
+        }
+    ]
+}
+];
+
+// ============================================================
+// GLOBALS
+// ============================================================
+let itinerariData = ITINERARI_DATA;
+let currentItinerario = null;
+let currentTappaIndex = 0;
+let map = null;
+let markers = [];
+let routeLine = null;
+
+const momentIcons = { mattino: '☀️', meta_mattina: '🌤️', pomeriggio: '⛅', tramonto: '🌅', alba: '🌄', sera: '🌃', mezzogiorno: '🌞' };
+const momentLabels = { mattino: 'Mattino', meta_mattina: 'Metà mattina', pomeriggio: 'Pomeriggio', tramonto: 'Tramonto', alba: 'Alba', sera: 'Sera', mezzogiorno: 'Mezzogiorno' };
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+    renderHomeCards();
+}
+
+function renderHomeCards() {
+    const container = document.getElementById('itinerari-container');
+    container.innerHTML = '';
+    const immagini = [
+        'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=800&auto=format&fit=crop',
+    ];
+    itinerariData.forEach((it, idx) => {
+        const card = document.createElement('div');
+        card.className = 'itinerario-card';
+        card.onclick = () => startItinerario(it.id);
+        const img = immagini[idx % immagini.length];
+        card.innerHTML = `
+            <div class="card-image" style="background-image:url('${img}')">
+                <div class="card-image-overlay"></div>
+                <div class="card-badge">${it.tema}</div>
+                <div class="card-personaggio">
+                    <strong>${it.personaggio.nome}</strong><br>
+                    <span>${it.personaggio.anni} · ${it.personaggio.professione}</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <h3>${it.nome}</h3>
+                <p class="card-subtitle">${it.sottotitolo}</p>
+                <p class="card-description">${it.descrizione}</p>
+                <div class="card-stats">
+                    <div class="stat"><div class="stat-value">⏱ ${it.durata_totale_ore}h</div><div class="stat-label">Durata</div></div>
+                    <div class="stat"><div class="stat-value">📍 ${it.tappe.length}</div><div class="stat-label">Tappe</div></div>
+                    <div class="stat"><div class="stat-value">🚶 ${it.distanza_totale_km}km</div><div class="stat-label">Distanza</div></div>
+                    <div class="stat"><div class="stat-value">💶 ${it.costo_stimato.split(' ')[0]}</div><div class="stat-label">Costo est.</div></div>
+                </div>
+                <button class="card-button">Inizia la Passeggiata →</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function startItinerario(id) {
+    currentItinerario = itinerariData.find(i => i.id === id);
+    if (!currentItinerario) return;
+    currentTappaIndex = 0;
+    stopAudio();
+    document.getElementById('pers-nome-sidebar').textContent = currentItinerario.personaggio.nome;
+    document.getElementById('pers-anni-sidebar').textContent = currentItinerario.personaggio.anni + ' · ' + currentItinerario.personaggio.professione;
+    showView('itinerary');
+    initMap();
+    renderTimeline();
+    loadTappa(0);
+}
+
+function showView(name) {
+    if (name !== 'itinerary') stopAudio();
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(name + '-view').classList.add('active');
+    document.getElementById('back-btn').style.display = name === 'itinerary' ? 'inline-block' : 'none';
+    if (name === 'itinerary' && map) setTimeout(() => map.invalidateSize(), 200);
+}
+
+function initMap() {
+    if (map) { map.remove(); map = null; }
+    map = L.map('map').setView([41.9028, 12.4964], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+    }).addTo(map);
+    const coords = currentItinerario.tappe.map(t => t.coordinate);
+    routeLine = L.polyline(coords, { color: '#7a2c2c', weight: 3, opacity: 0.7, dashArray: '10,8' }).addTo(map);
+    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+    markers = [];
+    currentItinerario.tappe.forEach((tappa, i) => {
+        const icon = momentIcons[tappa.momento_giornata] || '📍';
+        const m = L.marker(tappa.coordinate, {
+            icon: L.divIcon({
+                html: `<div style="background:linear-gradient(135deg,#7a2c2c,#5a1e1e);color:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1em;box-shadow:0 3px 10px rgba(0,0,0,0.45);border:2px solid #b8933a;cursor:pointer;">${icon}</div>`,
+                className: '', iconSize: [38, 38], iconAnchor: [19, 19]
+            })
+        }).addTo(map);
+        m.bindPopup(`<div style="font-family:'EB Garamond',Georgia,serif;min-width:160px;"><div style="font-family:'Cinzel',serif;font-size:0.78em;color:#7a2c2c;letter-spacing:1px;">TAPPA ${tappa.numero}</div><div style="font-size:1.05em;margin:4px 0;font-weight:600;">${tappa.nome}</div><div style="color:#888;font-size:0.82em;">${tappa.orario_consigliato} · ${momentLabels[tappa.momento_giornata] || ''}</div></div>`);
+        m.on('click', () => loadTappa(i));
+        markers.push(m);
+    });
+}
+
+function renderTimeline() {
+    const container = document.getElementById('timeline-items');
+    container.innerHTML = '';
+    currentItinerario.tappe.forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'timeline-item ' + (i < currentTappaIndex ? 'completed' : i === currentTappaIndex ? 'current' : 'upcoming');
+        div.onclick = () => loadTappa(i);
+        div.innerHTML = `<div class="timeline-icon">${momentIcons[t.momento_giornata] || '📍'}</div><div class="timeline-time">${t.orario_consigliato}</div><div class="timeline-name">${t.nome}</div><div class="timeline-duration">${t.durata_visita_min} min</div>`;
+        container.appendChild(div);
+    });
+    const pct = ((currentTappaIndex + 1) / currentItinerario.tappe.length) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function loadTappa(index) {
+    currentTappaIndex = index;
+    stopAudio();
+    const t = currentItinerario.tappe[index];
+    document.getElementById('tappa-numero').textContent = t.numero;
+    document.querySelector('#tappa-nome h2').textContent = t.nome;
+    document.querySelector('#tappa-nome .descrizione-breve').textContent = t.descrizione_breve || '';
+    document.querySelector('#tappa-orario .time').textContent = t.orario_consigliato;
+    document.querySelector('#tappa-orario .moment').textContent = (momentIcons[t.momento_giornata] || '') + ' ' + (momentLabels[t.momento_giornata] || t.momento_giornata);
+    document.querySelector('#tappa-orario .durata').textContent = '⏱ ' + t.durata_visita_min + ' minuti';
+    renderTappaContent(t);
+    renderTimeline();
+    if (map) { map.setView(t.coordinate, 16, { animate: true }); if (markers[index]) markers[index].openPopup(); }
+    document.querySelector('.nav-btn.prev').disabled = index === 0;
+    document.querySelector('.nav-btn.next').disabled = index === currentItinerario.tappe.length - 1;
+    document.getElementById('tappa-details').scrollTop = 0;
+}
+
+function renderTappaContent(t) {
+    const c = document.getElementById('tappa-content');
+    c.innerHTML = '';
+    const exp = t.esperienza_culturale || {};
+
+    // — Audio Player —
+    if (t.audio_narrazione) {
+        const audioDiv = document.createElement('div');
+        audioDiv.className = 'audio-player';
+        const waveBars = Array.from({length: 16}, (_, i) =>
+            `<div class="wave-bar" style="height:${4 + Math.random()*10}px;animation-delay:${i*0.07}s"></div>`
+        ).join('');
+        audioDiv.innerHTML = `
+            <div class="audio-icon">🎙️</div>
+            <div class="audio-info">
+                <div class="audio-title">✦ Audio Tour — Voce di Hawthorne</div>
+                <div class="audio-subtitle">Narrazione italiana · sintesi vocale</div>
+                <div class="audio-wave">${waveBars}</div>
+            </div>
+            <div class="audio-controls">
+                <button class="audio-btn" id="audio-play-btn" onclick="playAudioNarration(decodeURIComponent('${encodeURIComponent(t.audio_narrazione)}'))">▶</button>
+                <button class="audio-speed-btn" id="audio-speed-btn" onclick="cycleSpeed()">0.9×</button>
+            </div>
+        `;
+        c.appendChild(audioDiv);
+    }
+
+    // — Citazione —
+    if (exp.letteratura) {
+        const lit = exp.letteratura;
+        const div = document.createElement('div');
+        div.className = 'citazione-box';
+        div.innerHTML = `
+            <div class="citazione-text">${lit.citazione}</div>
+            <div class="citazione-fonte">— ${lit.autore}, <em>${lit.opera}</em> (${lit.anno})</div>
+            ${lit.contesto ? `<div class="citazione-contesto">📖 ${lit.contesto}</div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+
+    // — Narrativa Profonda —
+    if (exp.narrativa_profonda) {
+        const div = document.createElement('div');
+        div.className = 'section-card dark';
+        div.innerHTML = `
+            <h3>📜 Hawthorne a Roma — Contesto Storico e Letterario</h3>
+            <p class="narrativa-block">${exp.narrativa_profonda}</p>
+        `;
+        c.appendChild(div);
+    }
+
+    // — Connessione al romanzo —
+    if (exp.connessione_romanzo) {
+        const cr = exp.connessione_romanzo;
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div class="connessione-box">
+                <div class="conn-title">✦ Connessione con The Marble Faun</div>
+                <p>${cr.testo}</p>
+                ${cr.personaggi ? `<div class="conn-chars">${cr.personaggi.map(p => `<span class="conn-char">${p}</span>`).join('')}</div>` : ''}
+            </div>
+        `;
+        c.appendChild(div);
+    }
+
+    // — Atmosfera —
+    if (exp.atmosfera) {
+        const a = exp.atmosfera;
+        const div = document.createElement('div');
+        div.className = 'section-card gold';
+        div.innerHTML = `
+            <h3>🌤️ Atmosfera del Luogo</h3>
+            <div class="atmosfera-grid">
+                <div class="atm-item"><div class="atm-icon">💡</div><div class="atm-label">Luce</div><div class="atm-value">${a.luce || '—'}</div></div>
+                <div class="atm-item"><div class="atm-icon">🌡️</div><div class="atm-label">Temperatura</div><div class="atm-value">${a.temperatura_stimata || '—'}</div></div>
+                <div class="atm-item"><div class="atm-icon">👥</div><div class="atm-label">Affollamento</div><div class="atm-value">${a.affollamento || '—'}</div></div>
+                <div class="atm-item"><div class="atm-icon">💭</div><div class="atm-label">Emozione</div><div class="atm-value">${a.emozione_target || '—'}</div></div>
+            </div>
+            ${a.suoni_ambiente ? `<div style="margin-top:14px;font-size:0.88em;color:#666;"><strong>🔊 Suoni:</strong> ${a.suoni_ambiente.join(' · ')}</div>` : ''}
+            ${a.consiglio_fotografico ? `<div style="margin-top:10px;font-size:0.88em;color:#555;background:white;padding:10px 12px;border-radius:3px;border:1px solid #f0e8d8;">📸 <strong>Fotografia:</strong> ${a.consiglio_fotografico}</div>` : ''}
+            ${a.vista_panoramica ? `<div style="margin-top:8px;font-size:0.88em;color:#666;">🗺️ <strong>Vista panoramica:</strong> ${a.vista_panoramica}</div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+
+    // — Arte —
+    if (exp.arte_visiva) {
+        const av = exp.arte_visiva;
+        const div = document.createElement('div');
+        div.className = 'section-card blue';
+        div.innerHTML = `
+            <h3>🎨 Arte e Architettura</h3>
+            <p class="storia-text">${av.descrizione || ''}</p>
+            <div class="arte-info">
+                ${av.stile_architettonico ? `<div class="arte-field"><span class="field-label">Stile</span><span class="field-val">${av.stile_architettonico}</span></div>` : ''}
+                ${av.architetto ? `<div class="arte-field"><span class="field-label">Architetto</span><span class="field-val">${av.architetto}</span></div>` : ''}
+                ${av.anno_costruzione ? `<div class="arte-field"><span class="field-label">Anno</span><span class="field-val">${av.anno_costruzione}</span></div>` : ''}
+                ${av.committente ? `<div class="arte-field"><span class="field-label">Committente</span><span class="field-val">${av.committente}</span></div>` : ''}
+            </div>
+            ${av.opere_chiave && av.opere_chiave.length ? `<div class="opere-list" style="margin-top:12px;"><div style="font-family:'Cinzel',serif;font-size:0.72em;color:#999;letter-spacing:1px;margin-bottom:6px;">OPERE DI RIFERIMENTO</div>${av.opere_chiave.map(o => `<div class="opera-item">${o}</div>`).join('')}</div>` : ''}
+            ${av.dati_chiave ? `<div style="margin-top:12px;font-size:0.88em;color:#555;">${Object.entries(av.dati_chiave).map(([k,v]) => `<span style="margin-right:14px;"><strong>${k}:</strong> ${v}</span>`).join('')}</div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+
+    // — AI Layer —
+    if (exp.ai_layer) {
+        const ai = exp.ai_layer;
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div class="ai-box">
+                <h3>✦ Prompt AI — Ricostruire la Voce di Hawthorne</h3>
+                <div class="ai-prompt">${ai.prompt_ai_base}</div>
+                <div style="margin-bottom:10px;font-size:0.8em;color:#999;">Tono: <em style="color:#ccc;">${ai.tono}</em></div>
+                <div class="ai-tags">${(ai.temi_chiave || []).map(tag => `<span class="ai-tag">${tag}</span>`).join('')}</div>
+                ${ai.citazioni_suggerite ? `<div style="margin-top:12px;font-size:0.8em;color:#888;">📚 Fonti: ${ai.citazioni_suggerite.join(' · ')}</div>` : ''}
+            </div>
+        `;
+        c.appendChild(div);
+    }
+
+    // — Storia e Curiosità —
+    if (t.storia || t.curiosita) {
+        const div = document.createElement('div');
+        div.className = 'section-card';
+        div.style.borderLeftColor = '#b8933a';
+        div.innerHTML = `
+            <h3>🗝️ Storia e Curiosità</h3>
+            ${t.storia ? `<p class="storia-text">${t.storia}</p>` : ''}
+            ${t.curiosita ? `<div class="curiosita-box">💡 ${t.curiosita}</div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+
+    // — Info Pratiche —
+    if (t.metadata) {
+        const m = t.metadata;
+        const div = document.createElement('div');
+        div.className = 'section-card green';
+        div.innerHTML = `
+            <h3>🗂️ Informazioni Pratiche</h3>
+            <div class="meta-grid">
+                ${m.accessibilita ? `<div class="meta-item"><span class="meta-label">Accesso</span><span class="meta-val">${m.accessibilita}</span></div>` : ''}
+                ${m.orari_standard ? `<div class="meta-item"><span class="meta-label">Orari</span><span class="meta-val">${m.orari_standard}</span></div>` : ''}
+                ${m.avvertenza ? `<div class="meta-item"><span class="meta-label">⚠️ Nota</span><span class="meta-val">${m.avvertenza}</span></div>` : ''}
+                ${m.biglietto_combinato ? `<div class="meta-item"><span class="meta-label">Biglietto combinato</span><span class="meta-val">${m.biglietto_combinato}</span></div>` : ''}
+            </div>
+            ${m.servizi ? `<div style="margin-top:10px;font-size:0.85em;color:#666;"><strong>Servizi:</strong> ${Array.isArray(m.servizi) ? m.servizi.join(', ') : m.servizi}</div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+
+    // — Come Arrivare —
+    if (t.indicazioni_arrivo) {
+        const div = document.createElement('div');
+        div.className = 'section-card';
+        div.style.borderLeftColor = '#888';
+        div.innerHTML = `
+            <h3>🗺️ Come Arrivare</h3>
+            <p style="font-size:0.9em;color:#555;line-height:1.65;">${t.indicazioni_arrivo}</p>
+            ${t.tempo_spostamento_da_tappa_precedente ? `
+                <div style="margin-top:10px;font-size:0.85em;color:#888;">
+                    ${t.tempo_spostamento_da_tappa_precedente.a_piedi ? `🚶 A piedi: ${t.tempo_spostamento_da_tappa_precedente.a_piedi}` : ''}
+                    ${t.tempo_spostamento_da_tappa_precedente.metro ? ` · 🚇 Metro: ${t.tempo_spostamento_da_tappa_precedente.metro}` : ''}
+                    ${t.tempo_spostamento_da_tappa_precedente.distanza_km ? ` · 📏 ${t.tempo_spostamento_da_tappa_precedente.distanza_km} km` : ''}
+                </div>` : ''}
+        `;
+        c.appendChild(div);
+    }
+}
+
+function previousTappa() { if (currentTappaIndex > 0) loadTappa(currentTappaIndex - 1); }
+function nextTappa() { if (currentTappaIndex < currentItinerario.tappe.length - 1) loadTappa(currentTappaIndex + 1); }
+
+// Load voices on ready
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
